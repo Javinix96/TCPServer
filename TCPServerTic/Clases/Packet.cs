@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 
 namespace TCPServerTic.Clases
 {
-    internal class Packet : IDisposable
+
+    public class Packet : IDisposable
     {
 
         private List<byte> bufferList = null;
         private byte[] bufferArray = null;
-        private int readPos = 0;
+        public int readPos = 0;
         private bool disposed = false;
 
         public Packet()
@@ -32,6 +33,12 @@ namespace TCPServerTic.Clases
         {
             bufferArray = bufferList.ToArray();
             return bufferArray;
+        }
+
+        public void SetBytes(byte[] data)
+        {
+            WriteBytes(data);
+            bufferArray = bufferList.ToArray();
         }
 
         public void WriteBytes(byte[] value)
@@ -146,6 +153,19 @@ namespace TCPServerTic.Clases
             }
         }
 
+        public void WriteLength() => bufferList.InsertRange(0, BitConverter.GetBytes(bufferList.Count));
+
+        public int UnreadLength() => bufferArray.Length - readPos;
+
+        public void Reset()
+        {
+            bufferList?.Clear();
+            bufferList = null;
+            bufferArray = null;
+            readPos = 0;
+        }
+
+
         protected virtual void Dispose(bool disposing)
         {
             if (!disposed)
@@ -168,4 +188,5 @@ namespace TCPServerTic.Clases
         }
 
     }
+
 }

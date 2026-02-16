@@ -12,6 +12,7 @@ namespace TCPServerTic
             ServerManager.SM.Init();
             TCPServer server = new(IPAddress.Any, 7777);
             _ = server.Start();
+
             Console.ReadKey();
         }
     }

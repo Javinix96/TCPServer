@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -34,6 +35,7 @@ namespace TCPServerTic
                     Console.WriteLine("Esperando clientes");
                     TcpClient client = await listener.AcceptTcpClientAsync();
                     Console.WriteLine("Cliente Conectado");
+
                     _ = HandleClient(client);
                 }
 
@@ -49,24 +51,25 @@ namespace TCPServerTic
             }
         }
 
+
         private async Task HandleClient(TcpClient client)
         {
-
             var session = ServerManager.SM.AddClient(client);
-            try
-            {     
-                while (( session.bytesRead = await session._stream.ReadAsync(session._buffer, 0, session._buffer.Length)) > 0)
+
+            try 
+            { 
+                session.SendWelcome("Bienvenido al servidor TCP!");
+
+                while ((session.bytesRead = await session._stream.ReadAsync(session._buffer, 0, session._buffer.Length)) > 0)
                 {
                     if (session.bytesRead <= 0)
                         break;
 
-                    session.ProccessData();
-                }
-
+                    session.ReceiveData();
+                } 
             }
             catch (Exception e)
             {
-                session.Close();
                 Console.WriteLine("Cliente desconectado");
             }
             finally
@@ -75,6 +78,7 @@ namespace TCPServerTic
                 Console.WriteLine("Cliente desconectado");
             }
         }
+
 
         private void CloseServer()
         {

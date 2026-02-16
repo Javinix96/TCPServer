@@ -8,7 +8,7 @@ namespace TCPServerTic.Clases
     {
         private static readonly Lazy<ServerManager> _instance =
         new Lazy<ServerManager>(() => new ServerManager());
-        private ConcurrentDictionary<int, ClientSesion> _players = null;
+        private ConcurrentDictionary<int, ClientSession> _players = null;
         int playersNumber = 0;
 
         public static ServerManager SM => _instance.Value;
@@ -18,10 +18,10 @@ namespace TCPServerTic.Clases
             _players = new();
         }
 
-        public ClientSesion AddClient(TcpClient client)
+        public ClientSession AddClient(TcpClient client)
         {
             int id = Interlocked.Increment(ref playersNumber);
-            ClientSesion sesion = new ClientSesion(id, client);
+            ClientSession sesion = new ClientSession(id, client);
 
             if (!_players.TryAdd(id, sesion))
                 Debug.WriteLine($"Error en guardar al jugador{client.Client.RemoteEndPoint}");
@@ -30,7 +30,7 @@ namespace TCPServerTic.Clases
             return sesion;
         }
 
-        public void RemoveClient(ClientSesion client)
+        public void RemoveClient(ClientSession client)
         {
             if (!_players.TryRemove(client._id, out _))
                 Console.WriteLine($"Error en borrar el cliente: {client._id}");
