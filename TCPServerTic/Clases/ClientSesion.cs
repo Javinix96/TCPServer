@@ -1,4 +1,8 @@
-﻿using System.Net.Sockets;
+﻿using System.Net;
+using System.Net.Sockets;
+using TCPServerTic.Enums;
+using TCPServerTic.Interfaces;
+using TCPServerTic.Routers;
 
 
 namespace TCPServerTic.Clases
@@ -8,8 +12,8 @@ namespace TCPServerTic.Clases
         private TcpClient _tcpClient = null;
         private List<byte> _dataBuffer = new List<byte>();
         private Packet _pck;
-        private int bufferLength = 0;
-        private int _step = 0;
+        private IServerManager _sm = null;
+        private PacketRouter _router = null;    
 
         public NetworkStream _stream = null;
         public int _id = 0;
@@ -17,18 +21,16 @@ namespace TCPServerTic.Clases
         public int bytesRead = 0;
         public int bytesTotalRead = 0;
 
-        public int Step { get => _step; private set => _step = value; }
-
-
-        public ClientSession(int id,TcpClient client )
+        public ClientSession(int id,TcpClient client,IServerManager sm, PacketRouter router)
         {
             _tcpClient = client;
             _id = id;
             _stream = client.GetStream();
             _buffer = new byte[1024]; 
             _dataBuffer = new List<byte>();
-            _step = 0;
             _pck = new Packet();
+            _sm = sm;
+            _router = router;
         }
 
 
@@ -46,19 +48,16 @@ namespace TCPServerTic.Clases
             int lengthData = _pck.ReadInt();
 
             if (lengthData <= 0)
-                _pck.Dispose();
-
+                return;
 
             while (lengthData > 0 && lengthData <= _pck.UnreadLength())
             {
                 var data2 = _pck.ReadBytes(lengthData);
                 using (Packet _pck = new Packet(data2))
                 {
-                    //Recibimos los paquetes y hacermos la logica
                     int id = _pck.ReadInt();
-                    string message = _pck.ReadString();
-
-                    Console.WriteLine($"El cliente({id}) dice: { message}");
+                    Packet pckTemp = _pck.Copy();
+                    _router.Route((byte)id, pckTemp, this);
                 }
 
                 if (_pck.UnreadLength() >= 4)
@@ -71,30 +70,26 @@ namespace TCPServerTic.Clases
                     }
                     continue;
                 }
-
-                _pck.Dispose();
                 ClearBuffer();
                 break;
             }
-
         }
 
-        public void SendWelcome( string message)
+        public void SendWelcome(string message)
         {
             if (_stream == null)
                 return;
 
             try
             {
-
                 using (Packet _pck = new Packet())
                 {
-                    _pck.WriteInt(1);
+                    _pck.WriteInt((int)PacketTypeSend.Welcome);
                     _pck.WriteInt(this._id);
                     _pck.WriteString(message);
                     _pck.WriteLength();
 
-                    SendToCLient(_pck);
+                    SendToClient(_pck);
                 }
             }
             catch (Exception e)
@@ -103,7 +98,21 @@ namespace TCPServerTic.Clases
             }
         }
 
-        private void SendToCLient(Packet _pck)
+        public void SendData(Packet _pck)
+        {
+            if (_stream == null)
+                return;
+            try
+            {
+                SendToClient(_pck);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error al enviar datos al cliente: " + e.ToString());
+            }
+        }
+
+        private void SendToClient(Packet _pck)
         {
             if (_stream == null)
                 return;
@@ -113,16 +122,23 @@ namespace TCPServerTic.Clases
 
         private void ClearBuffer()
         {
-            _buffer = new byte[0];
+            _pck = new Packet();
+            _buffer = new byte[1024];
             bytesRead = 0;
-            bufferLength = 0;
             _dataBuffer.Clear();
-            _step = 0;
+        }
+
+        public IPEndPoint GetEndpoint()
+        {
+            if (_tcpClient.Client.RemoteEndPoint is IPEndPoint remoteEndPoint)
+            {
+                return remoteEndPoint;
+            }
+            return null;
         }
 
         public void Close()
         {
-            ServerManager.SM.RemoveClient(this);
             _tcpClient.Dispose();
             _tcpClient.Close();
         }

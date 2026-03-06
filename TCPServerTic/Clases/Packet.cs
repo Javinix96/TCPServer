@@ -28,6 +28,17 @@ namespace TCPServerTic.Clases
             WriteBytes(data);
             bufferArray = bufferList.ToArray();
         }
+        public Packet Copy()
+        {
+            Packet pck = new Packet();
+            pck.bufferArray = new byte[bufferArray.Length];
+            Array.Copy(bufferArray, pck.bufferArray, bufferArray.Length);
+            pck.readPos = this.readPos;
+            pck.bufferList = new List<byte>(bufferList);
+
+            return pck;
+        }
+
 
         public byte[] GetBytesArray()
         {
@@ -160,7 +171,7 @@ namespace TCPServerTic.Clases
         public void Reset()
         {
             bufferList?.Clear();
-            bufferList = null;
+            bufferList = new List<byte>();
             bufferArray = null;
             readPos = 0;
         }

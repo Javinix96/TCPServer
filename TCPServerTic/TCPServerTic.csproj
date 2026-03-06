@@ -8,8 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Clases\NewFolder\" />
-    <Folder Include="Interfaces\" />
+    <Folder Include="PacketsSendHandlers\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
 </Project>
