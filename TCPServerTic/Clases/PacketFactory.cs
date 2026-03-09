@@ -12,16 +12,17 @@ namespace TCPServerTic.Clases
 
             Packet packet = new Packet();
             packet.WriteInt((int)header);
+            packet.WriteBool(true);
             packet.WriteString(JsonConvert.SerializeObject(dto));
             packet.WriteLength();
             return packet;
-
         }
 
         public static Packet CreateString(PacketTypeSend header, string dto)
         {
             Packet packet = new Packet();
             packet.WriteInt((int)header);
+            packet.WriteBool(false);
             packet.WriteString(dto);
             packet.WriteLength();
             return packet;

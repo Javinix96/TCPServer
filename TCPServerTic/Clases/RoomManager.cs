@@ -35,15 +35,12 @@ namespace TCPServerTic.Clases
 
             newRoom.AddPlayer(session);
 
-            await Task.Delay(200);
-
             var roomsdto = GetRooms();
             
             var ss = PacketFactory.Create<RoomInfoDTO>(PacketTypeSend.RoomList, roomsdto);
             
             _serverManager.SendToAll(ss);
 
-            await Task.Delay(200);
 
             dto = GetPlayersInRoom(newRoomId);
 
@@ -68,35 +65,71 @@ namespace TCPServerTic.Clases
 
         public PlayerDTO GetPlayersInRoom(int roomID)
         {
-            if (_rooms.TryGetValue(roomId, out Room room))
+            Room room = null;
+            PlayerDTO player = new PlayerDTO();
+            if (!_rooms.TryGetValue(roomId, out room))
             {
-                var players = room.GetPlayers();
-
-                PlayerDTO player = new PlayerDTO();
-                player.RoomId = roomID;
-                player.Message = "Players retrieved successfully";
-                player.Success = true;
-
-                player.Players = players.Select(p => new Player()
-                {
-                    ID = p._id,
-                    Name = p.GetEndpoint().ToString(),
-                    LVL = 0
-                }).ToList();
-
-
-                return player;
-            }
-            else
-            {
-                Console.WriteLine($"Room with ID {roomId} not found.");
-                PlayerDTO player = new PlayerDTO();
-                player.RoomId = roomID;
-                player.Message = "Room not found";
                 player.Success = false;
+                player.RoomId = roomId;
+                player.Message = "Error en unirse al server";
                 return player;
             }
+
+            var players = room.GetPlayers();
+            player.RoomId = roomID;
+            player.Message = "Players retrieved successfully";
+            player.Success = true;
+            player.Players = players.Select(p => new Player()
+            {
+                ID = p._id,
+                Name = $"Player {p._id}",
+                LVL = 0
+            }).ToList();
+
+
+            return player;
+
         }
 
+        public PlayerDTO OnPlayerJoin(int roomId, ClientSession client)
+        {
+            Room room = null;
+            PlayerDTO player = new PlayerDTO();
+
+            if (!_rooms.TryGetValue(roomId,out room))
+            {
+                player.Success=false;
+                player.RoomId = roomId;
+                player.Message = "Error en unirse al server";
+                return player;
+            }
+
+            if (!room.AddPlayer(client))
+            {
+                player.Success = false;
+                player.RoomId = roomId;
+                player.Message = "Error en agregar al jugador";
+                return player;
+            }
+
+            return GetPlayersInRoom(roomId);
+        }
+
+        public void SendPlayerInARoom(int roomID,Packet pck)
+        {
+            Room room = null;
+            if (!_rooms.TryGetValue(roomID, out room)) return;
+
+            foreach(ClientSession session in room.GetPlayers())
+                    session.SendData(pck);
+
+        }
+    
+        public void RemovePlayerFromRoom(ClientSession session)
+        {
+            _rooms.TryRemove(session._id,out _);
+
+            //if (_rooms.player)
+        }
     }
 }

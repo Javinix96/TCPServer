@@ -9,10 +9,11 @@ namespace TCPServerTic.Clases
 {
     public class ClientSession
     {
-        private TcpClient _tcpClient = null;
+        public TcpClient _tcpClient = null;
         private List<byte> _dataBuffer = new List<byte>();
         private Packet _pck;
         private IServerManager _sm = null;
+        private IRoomManager _roomManager;
         private PacketRouter _router = null;    
 
         public NetworkStream _stream = null;
@@ -21,7 +22,7 @@ namespace TCPServerTic.Clases
         public int bytesRead = 0;
         public int bytesTotalRead = 0;
 
-        public ClientSession(int id,TcpClient client,IServerManager sm, PacketRouter router)
+        public ClientSession(int id,TcpClient client,IServerManager sm, PacketRouter router,IRoomManager rm)
         {
             _tcpClient = client;
             _id = id;
@@ -31,6 +32,7 @@ namespace TCPServerTic.Clases
             _pck = new Packet();
             _sm = sm;
             _router = router;
+            _roomManager = rm;
         }
 
 
@@ -57,7 +59,7 @@ namespace TCPServerTic.Clases
                 {
                     int id = _pck.ReadInt();
                     Packet pckTemp = _pck.Copy();
-                    _router.Route((byte)id, pckTemp, this);
+                    _router.Route((byte)id, _pck, this);
                 }
 
                 if (_pck.UnreadLength() >= 4)
@@ -78,7 +80,10 @@ namespace TCPServerTic.Clases
         public void SendWelcome(string message)
         {
             if (_stream == null)
+            {
+                Console.WriteLine("nulo");
                 return;
+            }
 
             try
             {
@@ -141,6 +146,7 @@ namespace TCPServerTic.Clases
         {
             _tcpClient.Dispose();
             _tcpClient.Close();
+            _roomManager.RemovePlayerFromRoom(this);
         }
     }
 }

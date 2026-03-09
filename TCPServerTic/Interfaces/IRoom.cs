@@ -9,7 +9,7 @@ namespace TCPServerTic.Interfaces
 {
     public interface IRoom
     {
-        void AddPlayer(ClientSession player);
+        bool AddPlayer(ClientSession player);
         void RemovePlayer(ClientSession player);
         Task SendDataToPlayers();
 

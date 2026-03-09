@@ -8,6 +8,7 @@
         RequestRooms,
         createRoom,
         Players,
+        JoinRoomRequest,
     }
     public enum PacketTypeSend
     {
@@ -16,6 +17,7 @@
         Message,
         RoomList,
         PlayersInRoom,
+        JoinRoom
     }
     
 

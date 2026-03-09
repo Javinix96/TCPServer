@@ -22,19 +22,12 @@ namespace TCPServerTic.Clases
             _roomName = roomName;
         }
 
-        public void AddPlayer(ClientSession player)
+        public bool AddPlayer(ClientSession player)
         {
-            //PacketSend pck = null;
             if (!TryAddPlayer(player._id, player))
-            {
-                //pck = new ErrorMessage("Ya no hay espacio disponible");
-                //player.SendData(pck.WritePacket());
-                return ;
-            }
-            //pck = new SendMessage("Bienvenido a la sala " + _roomID);
-            Packet pck = PacketFactory.CreateString(PacketTypeSend.Message, "Bienvenido");
-            player.SendData(pck);
-            return;
+                return false;
+
+            return true;
         }
 
         public void RemovePlayer(ClientSession player)

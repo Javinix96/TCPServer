@@ -10,7 +10,7 @@ namespace TCPServerTic.Interfaces
 {
     public  interface IServerManager
     {
-        public ClientSession AddClient(TcpClient client);
+        public ClientSession AddClient(TcpClient client, IRoomManager rm);
         public void RemoveClient(ClientSession client);
         public void SendToAll(Packet packet);
     }

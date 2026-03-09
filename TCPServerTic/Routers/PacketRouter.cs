@@ -23,7 +23,9 @@ namespace TCPServerTic.Routers
                 { (int)PacketTypeReceive.Welcome, new Welcome() },
                 { (int)PacketTypeReceive.RequestRooms, new RequestedRooms(rm) },
                 { (int)PacketTypeReceive.createRoom, new RoomCreate(rm) },
+                { (int)PacketTypeReceive.JoinRoomRequest, new PlayerJoinRoom(rm) },
                 { (int)PacketTypeSend.RoomList, new SendRooms(rm) },
+
             };
         }
 

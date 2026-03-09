@@ -1,0 +1,15 @@
+# fly.toml app configuration file generated for tcpservertic on 2026-03-05T20:52:24-06:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'tcpservertic'
+primary_region = 'dfw'
+
+[[services]]
+  internal_port = 7777
+  protocol = "tcp"
+
+[[services.ports]]
+  port = 7777
+  handlers = ["tcp"]

@@ -16,12 +16,13 @@ namespace TCPServerTic.Clases
         {
             _players = new();
             _packetRouter = pr;
+
         }
 
-        public ClientSession AddClient(TcpClient client)
+        public ClientSession AddClient(TcpClient client, IRoomManager rm)
         {
             int id = Interlocked.Increment(ref playersNumber);
-            ClientSession sesion = new ClientSession(id, client, this, _packetRouter);
+            ClientSession sesion = new ClientSession(id, client, this, _packetRouter,rm);
 
             if (!_players.TryAdd(id, sesion))
                 Debug.WriteLine($"Error en guardar al jugador{client.Client.RemoteEndPoint}");
@@ -34,9 +35,10 @@ namespace TCPServerTic.Clases
         {
             if (!_players.TryRemove(client._id, out _))
                 Console.WriteLine($"Error en borrar el cliente: {client._id}");
+            int clintID = client._id;
             client._id = Interlocked.Decrement(ref playersNumber);
-            Console.WriteLine($"El cliente se ha desconectado: {client._id}");
-            //_roomManager.RemovePlayerFromRoom(client._id,client);
+            Console.WriteLine($"El cliente se ha desconectado: {clintID}");
+            clintID = 0;
         }
 
         public void SendToAll(Packet packet)
