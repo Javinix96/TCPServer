@@ -4,7 +4,7 @@ namespace TCPServerTic.Clases.SendClases
 {
     public class SendMessage : PacketSend
     {
-        public override PacketTypeSend Type => PacketTypeSend.Message;
+        public override PacketTypeSend Type => PacketTypeSend.SendMessage;
 
         private string _message;
 

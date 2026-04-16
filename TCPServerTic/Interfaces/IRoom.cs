@@ -12,7 +12,6 @@ namespace TCPServerTic.Interfaces
         bool AddPlayer(ClientSession player);
         void RemovePlayer(ClientSession player);
         Task SendDataToPlayers();
-
         ClientSession[] GetPlayers();
     }
 }

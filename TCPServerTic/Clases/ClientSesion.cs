@@ -9,23 +9,27 @@ namespace TCPServerTic.Clases
 {
     public class ClientSession
     {
-        public TcpClient _tcpClient = null;
+        public TcpClient _tcpClient;
         private List<byte> _dataBuffer = new List<byte>();
         private Packet _pck;
-        private IServerManager _sm = null;
+        private IServerManager _sm;
         private IRoomManager _roomManager;
-        private PacketRouter _router = null;    
+        private PacketRouter _router;
+        private Player _playerData;
+        private NetworkStream _stream;
 
-        public NetworkStream _stream = null;
-        public int _id = 0;
-        public byte[] _buffer = null;
+        public Player PlayerData {  get { return _playerData; }  private set { _playerData = value; } }
+        public NetworkStream Stream {  get => _stream; }
+
+        public byte[] _buffer;
         public int bytesRead = 0;
         public int bytesTotalRead = 0;
 
         public ClientSession(int id,TcpClient client,IServerManager sm, PacketRouter router,IRoomManager rm)
         {
             _tcpClient = client;
-            _id = id;
+            _playerData = new Player();
+            _playerData.ID = id;
             _stream = client.GetStream();
             _buffer = new byte[1024]; 
             _dataBuffer = new List<byte>();
@@ -89,8 +93,8 @@ namespace TCPServerTic.Clases
             {
                 using (Packet _pck = new Packet())
                 {
-                    _pck.WriteInt((int)PacketTypeSend.Welcome);
-                    _pck.WriteInt(this._id);
+                    _pck.WriteInt((int)PacketTypeSend.SendWelcome);
+                    _pck.WriteInt(this._playerData.ID);
                     _pck.WriteString(message);
                     _pck.WriteLength();
 
@@ -146,7 +150,7 @@ namespace TCPServerTic.Clases
         {
             _tcpClient.Dispose();
             _tcpClient.Close();
-            _roomManager.RemovePlayerFromRoom(this);
+            _roomManager.RemovePlayerFromRoom(_playerData.RoomID,this);
         }
     }
 }

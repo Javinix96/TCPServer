@@ -11,11 +11,11 @@ namespace TCPServerTic.Clases.DTOS
         public int RoomId { get; set; }
         public string Message { get; set; }
         public bool Success { get; set; }
-        public List<Player> Players { get; set; }
+        public List<PlayerInfoDTO> Players { get; set; }
 
     }
 
-    public class Player
+    public class PlayerInfoDTO
     {
         public int ID { get; set; }
         public string Name { get; set; }

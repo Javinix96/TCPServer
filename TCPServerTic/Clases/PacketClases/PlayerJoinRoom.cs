@@ -11,7 +11,7 @@ namespace TCPServerTic.Clases.PacketRecieve
 {
     public class PlayerJoinRoom : IPacketHandler
     {
-        public int Header => (int)PacketTypeReceive.JoinRoomRequest;
+        public int Header => (int)PacketTypeReceive.ReceivedJoinRoomRequest;
 
         private IRoomManager _roomManager;
 
@@ -21,8 +21,8 @@ namespace TCPServerTic.Clases.PacketRecieve
         {
             int roomID = payload.ReadInt();
             var dto = _roomManager.OnPlayerJoin(roomID,client);
-            var pck = PacketFactory.Create<PlayerDTO>(PacketTypeSend.JoinRoom,dto);
-            _roomManager.SendPlayerInARoom(roomID, pck);         
+            var pck = PacketFactory.Create<PlayerDTO>(PacketTypeSend.SendJoinRoom,dto);
+            _roomManager.SendPlayersToARoom(roomID, pck);         
         }
     }
 }

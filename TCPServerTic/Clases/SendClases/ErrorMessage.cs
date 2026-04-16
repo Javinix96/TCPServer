@@ -9,7 +9,7 @@ namespace TCPServerTic.Clases.SendClases
 {
     public class ErrorMessage : PacketSend
     {
-        public override PacketTypeSend Type => PacketTypeSend.Error;
+        public override PacketTypeSend Type => PacketTypeSend.SendError;
 
         private string _message;
 
@@ -19,7 +19,7 @@ namespace TCPServerTic.Clases.SendClases
         public override Packet WritePacket()
         {
             Packet packet = new Packet();
-            packet.WriteInt((int)PacketTypeSend.Error);
+            packet.WriteInt((int)PacketTypeSend.SendError);
             packet.WriteString(_message);
             packet.WriteLength();
 

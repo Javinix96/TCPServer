@@ -2,22 +2,37 @@
 {
     public enum PacketTypeReceive
     {
-        Error = 0,
-        Welcome,
-        Message,
-        RequestRooms,
-        createRoom,
-        Players,
-        JoinRoomRequest,
+        ReceivedError = 0,
+        ReceivedWelcome,
+        ReceivedExit,
+        ReceivedMessage,
+        ReceivedRequestRooms,
+        ReceivedcreateRoom,
+        ReceivedPlayers,
+        ReceivedJoinRoomRequest,
+        ReceivedExitRoom,
+        ReceivedRequestJoin,
+        ReceivedPlayerReady,
+        ReceivedPosition,
+        ReceivedReadyPos
     }
     public enum PacketTypeSend
     {
-        Error = 999,
-        Welcome,
-        Message,
-        RoomList,
-        PlayersInRoom,
-        JoinRoom
+        SendError = 999,
+        SendAccept,
+        SendWelcome,
+        SendMessage,
+        SendRoomList,
+        SendRoomCreated,
+        SendPlayersInRoom,
+        SendJoinRoom,
+        SendLoadScene,
+        SendCounter,
+        SendWho,
+        SendTurn,
+        SendPosition,
+        SendBoard,
+        SendWinner
     }
     
 

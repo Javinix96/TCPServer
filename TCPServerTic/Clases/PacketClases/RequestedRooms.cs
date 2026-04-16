@@ -6,7 +6,7 @@ namespace TCPServerTic.Clases.PacketRecieve
 {
     public class RequestedRooms : IPacketHandler
     {
-        public int Header => (int)PacketTypeReceive.RequestRooms;
+        public int Header => (int)PacketTypeReceive.ReceivedRequestRooms;
         private RoomManager _roomManager;
 
         public RequestedRooms(RoomManager roomManager)
@@ -17,7 +17,7 @@ namespace TCPServerTic.Clases.PacketRecieve
         public void Handle(ClientSession client, Packet payload)
         {
             var dto = _roomManager.GetRooms();
-            Packet pck = PacketFactory.Create<RoomInfoDTO>(PacketTypeSend.RoomList, dto);
+            Packet pck = PacketFactory.Create<RoomInfoDTO>(PacketTypeSend.SendRoomList, dto);
             client.SendData(pck);
         }
     }

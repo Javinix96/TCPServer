@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TCPServerTic.Clases;
+using TCPServerTic.Clases.PacketClases;
 using TCPServerTic.Clases.PacketRecieve;
 using TCPServerTic.Clases.PAcketRecieve;
 using TCPServerTic.Clases.SendClases;
@@ -16,16 +17,21 @@ namespace TCPServerTic.Routers
     {
         private Dictionary<int, IPacketHandler> _handlers;
 
-        public void Init(RoomManager rm)
+        public void Init(RoomManager rm, ServerManager sm)
         {
             _handlers = new Dictionary<int, IPacketHandler>()
             {
-                { (int)PacketTypeReceive.Welcome, new Welcome() },
-                { (int)PacketTypeReceive.RequestRooms, new RequestedRooms(rm) },
-                { (int)PacketTypeReceive.createRoom, new RoomCreate(rm) },
-                { (int)PacketTypeReceive.JoinRoomRequest, new PlayerJoinRoom(rm) },
-                { (int)PacketTypeSend.RoomList, new SendRooms(rm) },
-
+                { (int)PacketTypeReceive.ReceivedWelcome, new Welcome() },
+                { (int)PacketTypeReceive.ReceivedRequestRooms, new RequestedRooms(rm) },
+                { (int)PacketTypeReceive.ReceivedcreateRoom, new RoomCreate(rm) },
+                { (int)PacketTypeReceive.ReceivedExitRoom, new ExitRoom(rm,sm) },
+                { (int)PacketTypeReceive.ReceivedJoinRoomRequest, new PlayerJoinRoom(rm) },
+                { (int)PacketTypeReceive.ReceivedPlayerReady, new PlayerReady(rm) },
+                { (int)PacketTypeReceive.ReceivedRequestJoin, new LoadGame(rm) },
+                { (int)PacketTypeReceive.ReceivedPosition, new Position(rm) },
+                { (int)PacketTypeReceive.ReceivedReadyPos, new Board(rm) },
+                { (int)PacketTypeReceive.ReceivedExit, new ExitPlayer(sm) },
+                { (int)PacketTypeSend.SendRoomList, new SendRooms(rm) },
             };
         }
 

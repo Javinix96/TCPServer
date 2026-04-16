@@ -12,7 +12,7 @@ namespace TCPServerTic.Clases.SendClases
 {
     public class SendRooms : IPacketHandler
     {
-        public int Header => (int)PacketTypeSend.RoomList;
+        public int Header => (int)PacketTypeSend.SendRoomList;
 
         private RoomManager _roomManager;
 
@@ -22,7 +22,7 @@ namespace TCPServerTic.Clases.SendClases
         public void Handle(ClientSession client, Packet payload)
         {
             var dto = _roomManager.GetRooms();
-            var packet = PacketFactory.Create<RoomInfoDTO>(PacketTypeSend.RoomList, dto);
+            var packet = PacketFactory.Create<RoomInfoDTO>(PacketTypeSend.SendRoomList, dto);
           
             client.SendData(packet);
         }
