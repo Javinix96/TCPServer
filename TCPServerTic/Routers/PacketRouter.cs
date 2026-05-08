@@ -25,12 +25,15 @@ namespace TCPServerTic.Routers
                 { (int)PacketTypeReceive.ReceivedRequestRooms, new RequestedRooms(rm) },
                 { (int)PacketTypeReceive.ReceivedcreateRoom, new RoomCreate(rm) },
                 { (int)PacketTypeReceive.ReceivedExitRoom, new ExitRoom(rm,sm) },
-                { (int)PacketTypeReceive.ReceivedJoinRoomRequest, new PlayerJoinRoom(rm) },
+                { (int)PacketTypeReceive.ReceivedJoinRoomRequest, new PlayerRequestJoinRoom(rm) },
                 { (int)PacketTypeReceive.ReceivedPlayerReady, new PlayerReady(rm) },
                 { (int)PacketTypeReceive.ReceivedRequestJoin, new LoadGame(rm) },
                 { (int)PacketTypeReceive.ReceivedPosition, new Position(rm) },
                 { (int)PacketTypeReceive.ReceivedReadyPos, new Board(rm) },
                 { (int)PacketTypeReceive.ReceivedExit, new ExitPlayer(sm) },
+                { (int)PacketTypeReceive.ReceivedName, new WriteName() },
+                { (int)PacketTypeReceive.ReceivedSearchRoom, new SearchRoom(rm) },
+                { (int)PacketTypeReceive.ReceivedPassword, new RoomPassword(rm) },
                 { (int)PacketTypeSend.SendRoomList, new SendRooms(rm) },
             };
         }

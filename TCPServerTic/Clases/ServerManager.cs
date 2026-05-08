@@ -30,7 +30,14 @@ namespace TCPServerTic.Clases
 
             Console.WriteLine($"jugador agregado {client.Client.RemoteEndPoint} con el id: {id}");
 
-            sesion.SendData(PacketFactory.CreateString(PacketTypeSend.SendAccept,"Bienvenido al server"));
+            Packet pck = new Packet();
+            pck.WriteInt((int)PacketTypeSend.SendAccept);
+            pck.WriteInt(id);
+            pck.WriteString("Bienvenido al server");
+            pck.WriteLength();
+            sesion.SendData(pck);
+
+            //sesion.SendData(PacketFactory.CreateString(PacketTypeSend.SendAccept,"Bienvenido al server"));
 
             return sesion;
         }

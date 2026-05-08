@@ -9,9 +9,13 @@ namespace TCPServerTic.Clases.DTOS
     public class PlayerDTO
     {
         public int RoomId { get; set; }
+        public string RoomName { get; set; }
         public string Message { get; set; }
         public bool Success { get; set; }
+        public bool RoomHasPassword { get; set; }
         public List<PlayerInfoDTO> Players { get; set; }
+
+        public RoomInfo Room { get; set; }
 
     }
 
@@ -20,5 +24,6 @@ namespace TCPServerTic.Clases.DTOS
         public int ID { get; set; }
         public string Name { get; set; }
         public int LVL { get; set; }
+        public bool Ready { get; set; }
     }
 }

@@ -19,6 +19,9 @@ namespace TCPServerTic
             router.Init(roomManager,sm);
             server = new(IPAddress.Any, 7777,sm,roomManager);
             await server.Start();
+            Console.WriteLine("Presiona una tecla para salir...");
+            Console.ReadKey();
+
         }
     }
 

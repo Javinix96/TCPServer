@@ -9,19 +9,22 @@ using TCPServerTic.Interfaces;
 
 namespace TCPServerTic.Clases.PacketRecieve
 {
-    public class PlayerJoinRoom : IPacketHandler
+    public class PlayerRequestJoinRoom : IPacketHandler
     {
         public int Header => (int)PacketTypeReceive.ReceivedJoinRoomRequest;
 
         private IRoomManager _roomManager;
 
-        public PlayerJoinRoom(RoomManager manager) => _roomManager = manager;
+        public PlayerRequestJoinRoom(RoomManager manager) => _roomManager = manager;
 
         public void Handle(ClientSession client, Packet payload)
         {
             int roomID = payload.ReadInt();
             var dto = _roomManager.OnPlayerJoin(roomID,client);
-            var pck = PacketFactory.Create<PlayerDTO>(PacketTypeSend.SendJoinRoom,dto);
+            if (dto == null) return;
+            var pck2 = PacketFactory.Create<PlayerDTO>(PacketTypeSend.SendRequestJoinToRoom, dto);
+            client.SendData(pck2);
+            var pck = PacketFactory.Create<PlayerDTO>(PacketTypeSend.SendPlayersInRoom,dto);
             _roomManager.SendPlayersToARoom(roomID, pck);         
         }
     }

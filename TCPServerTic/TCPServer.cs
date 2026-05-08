@@ -62,7 +62,7 @@ namespace TCPServerTic
                 {
                     
                     var readTask = session.Stream.ReadAsync(session._buffer, 0, session._buffer.Length);
-                     int bytes = await readTask;
+                    int bytes = await readTask;
                     if (bytes <= 0)
                     {
                         Console.WriteLine("0 bytes recibidos");
@@ -80,6 +80,7 @@ namespace TCPServerTic
             finally
             {
                 session.Close();
+
                 _instance.RemoveClient(session); 
             }
         }

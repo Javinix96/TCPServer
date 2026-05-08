@@ -1,7 +1,6 @@
 ﻿using TCPServerTic.Clases.DTOS;
 using TCPServerTic.Enums;
 using TCPServerTic.Interfaces;
-using TCPServerTic.Routers;
 
 namespace TCPServerTic.Clases.PacketRecieve
 {
@@ -21,9 +20,10 @@ namespace TCPServerTic.Clases.PacketRecieve
         public void Handle(ClientSession client, Packet payload)
         {
             int roomID = payload.ReadInt();
-            var dto = _roomManager.RemovePlayerFromRoom(roomID, client);
-            var pck = PacketFactory.Create<PlayerDTO>(PacketTypeSend.SendPlayersInRoom, dto);
-            _roomManager.SendPlayersToARoom(roomID, pck);
+            int times = payload.ReadInt();
+            _roomManager.RemovePlayerFromRoom(roomID, client,times);
+            //var pck = PacketFactory.Create<PlayerDTO>(PacketTypeSend.SendPlayersInRoom, dto);
+            //_roomManager.SendPlayersToARoom(roomID, pck);
 
             var roomsDTO = _roomManager.GetRooms();
             var pck2 = PacketFactory.Create<RoomInfoDTO>(PacketTypeSend.SendRoomList, roomsDTO);

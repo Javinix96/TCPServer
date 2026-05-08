@@ -9,11 +9,8 @@ namespace TCPServerTic.Clases.PacketRecieve
         public int Header => (int)PacketTypeReceive.ReceivedRequestRooms;
         private RoomManager _roomManager;
 
-        public RequestedRooms(RoomManager roomManager)
-        {
-            _roomManager = roomManager;
-        }
-
+        public RequestedRooms(RoomManager roomManager) => _roomManager = roomManager;
+        
         public void Handle(ClientSession client, Packet payload)
         {
             var dto = _roomManager.GetRooms();

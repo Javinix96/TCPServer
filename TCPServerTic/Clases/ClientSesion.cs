@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using TCPServerTic.Clases.DTOS;
 using TCPServerTic.Enums;
 using TCPServerTic.Interfaces;
 using TCPServerTic.Routers;
@@ -148,9 +149,12 @@ namespace TCPServerTic.Clases
 
         public void Close()
         {
+            _roomManager.RemovePlayerFromRoom(_playerData.RoomID,this);
+            var roomsDTO = _roomManager.GetRooms();
+            var pck2 = PacketFactory.Create<RoomInfoDTO>(PacketTypeSend.SendRoomList, roomsDTO);
+            _sm.SendToAll(pck2);
             _tcpClient.Dispose();
             _tcpClient.Close();
-            _roomManager.RemovePlayerFromRoom(_playerData.RoomID,this);
         }
     }
 }

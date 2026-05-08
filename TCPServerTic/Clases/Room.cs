@@ -10,6 +10,7 @@ namespace TCPServerTic.Clases
         private ConcurrentDictionary<int, ClientSession> _roomPlayers = new();
         private int _roomID;
         private string _roomName;
+        private string _roomHost;
         private string _password;
         private bool _isPrivate;
         private int _time;
@@ -19,12 +20,18 @@ namespace TCPServerTic.Clases
 
         public string RoomName => _roomName;
         public int RoomID => _roomID;
+        public string RoomHost => _roomHost;
+        public bool IsPrivate => _isPrivate;
+        public string Password => _password;
+        
+        public bool HasPassword => !string.IsNullOrEmpty(_password);
 
-        public Room(int roomID, string roomName, string password, bool isPrivate, int time)
+        public Room(int roomID, string roomName,string hostname, string password, bool isPrivate, int time)
         {
             _roomPlayers = new ConcurrentDictionary<int, ClientSession>(2, 2);
             _roomID = roomID;
             _roomName = roomName;
+            _roomHost = hostname;
             _password = password;
             _isPrivate = isPrivate;
             _time = time;
@@ -73,11 +80,12 @@ namespace TCPServerTic.Clases
             {
                 if (players[i].PlayerData.ID == id)
                 {
-                    players[i].PlayerData.Play = true;
+                    players[i].PlayerData.Ready = true;
                     break;
                 }
             }
         }
+
 
         public void SetPlayerInGame(int id)
         {
@@ -134,7 +142,7 @@ namespace TCPServerTic.Clases
             int allPlayers = 0;
             foreach (var player in _roomPlayers.Values)
             {
-                if (player.PlayerData.InGame)
+                if (player.PlayerData.Ready)
                     allPlayers++;
             }
 

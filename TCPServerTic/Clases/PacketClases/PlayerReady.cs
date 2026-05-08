@@ -20,8 +20,15 @@ namespace TCPServerTic.Clases.PacketRecieve
         public void Handle(ClientSession client, Packet payload)
         {
             int roomID = payload.ReadInt();
+            int playerID = payload.ReadInt();
 
-            _roomManager.SetReadyPlayer(roomID,client);
+            if (playerID != client.PlayerData.ID)
+            {
+                Console.WriteLine("Los id no Coinciden");
+                return;
+            }
+
+            _roomManager.SetReadyPlayer(roomID,playerID,client);
         }
     }
 }

@@ -1,7 +1,10 @@
-﻿using System.Collections.Concurrent;
+﻿using Newtonsoft.Json;
+using System.Collections.Concurrent;
+using System.Text.Json;
 using TCPServerTic.Clases.DTOS;
 using TCPServerTic.Enums;
 using TCPServerTic.Interfaces;
+using static System.Collections.Specialized.BitVector32;
 
 namespace TCPServerTic.Clases
 {
@@ -9,7 +12,6 @@ namespace TCPServerTic.Clases
     {
         private IServerManager _serverManager;
         private ConcurrentDictionary<int, Room> _rooms = null;
-
         int roomId = 0;
 
         public RoomManager(IServerManager sm) { 
@@ -18,13 +20,13 @@ namespace TCPServerTic.Clases
         }
 
         public async Task<PlayerDTO> CreateRoom(ClientSession session,string name, string password, bool isPrivate, int time)
-        {
-   
+        { 
             int newRoomId = Interlocked.Increment(ref roomId);
 
             PlayerDTO dto = new PlayerDTO();
+            dto.Room = new RoomInfo();
 
-            Room newRoom = new Room(newRoomId,name,password, isPrivate, time);
+            Room newRoom = new Room(newRoomId,name,session.PlayerData.Name, password, isPrivate, time);
 
             if (!_rooms.TryAdd(newRoomId, newRoom))
             {
@@ -37,13 +39,13 @@ namespace TCPServerTic.Clases
 
             newRoom.AddPlayer(session);
 
+            dto.Room.RoomId = newRoomId;
+            dto.Room.RoomName = name;
 
             var roomsdto = GetRooms();
-            
             var ss = PacketFactory.Create<RoomInfoDTO>(PacketTypeSend.SendRoomList, roomsdto);
             
             _serverManager.SendToAll(ss);
-
             dto = GetPlayersInRoom(newRoomId);
 
             var packet = PacketFactory.Create<PlayerDTO>(PacketTypeSend.SendRoomCreated, dto);
@@ -56,10 +58,12 @@ namespace TCPServerTic.Clases
         {
             RoomInfoDTO dto = new RoomInfoDTO();
             dto.Count = _rooms.Count;
-            var rooms = _rooms.Values.Select(r => new RoomInfo
+            var roomstmp = (from rs in _rooms where rs.Value.IsPrivate == false select rs.Value).ToList();
+            var rooms = roomstmp.Select(r => new RoomInfo
             {
                 RoomId = r.RoomID,
                 RoomName = r.RoomName,
+                RoomHost = r.RoomHost,
                 PlayersCount = r.GetPlayers().Length,
             } ).ToList();
 
@@ -68,10 +72,69 @@ namespace TCPServerTic.Clases
             return dto;
         }
 
+        public void SearchRoom(ClientSession session, string roomName)
+        {
+            Room room = null;
+            int roomID = SearchRoomByName(roomName);
+
+            if (roomID == -1)
+            {
+                using (Packet pck = new Packet())
+                {
+                    pck.WriteInt((int)PacketTypeSend.SendMessage);
+                    pck.WriteString("No se encontro la sala");
+                    pck.WriteLength();
+                    session.SendData(pck);
+                }
+                return;
+            }
+
+            if (!_rooms.TryGetValue(roomID, out room))
+            {
+                using (Packet pck = new Packet())
+                {
+                    pck.WriteInt((int)PacketTypeSend.SendMessage);
+                    pck.WriteString($"No se encontro la sala {roomID}");
+                    pck.WriteLength();
+                    session.SendData(pck);
+                }
+                return;
+            }
+
+            RoomInfoDTO dto = new RoomInfoDTO();
+
+            dto.Count = 1;
+            dto.Rooms = new List<RoomInfo>()
+            {
+                new RoomInfo()
+                {
+                    RoomId = room.RoomID,
+                    RoomName = room.RoomName,
+                    RoomHost = room.RoomHost,
+                    PlayersCount = room.GetPlayers().Length
+                }
+            };
+
+            using (Packet pck = new Packet())
+            {
+                pck.WriteInt((int)PacketTypeSend.SendSearchedRoom);
+                pck.WriteString(JsonConvert.SerializeObject(dto));
+                pck.WriteLength();
+                session.SendData(pck);
+            }
+        }
+
+        private int SearchRoomByName(string nameRoom)
+        {
+            var room = _rooms.Values.FirstOrDefault(r => r.RoomName.Equals(nameRoom, StringComparison.OrdinalIgnoreCase));
+            return room != null ? room.RoomID : -1;
+        }
+
         public PlayerDTO GetPlayersInRoom(int roomID)
         {
             Room room = null;
             PlayerDTO player = new PlayerDTO();
+            player.Room = new RoomInfo();
             if (!_rooms.TryGetValue(roomId, out room))
             {
                 player.Success = false;
@@ -82,21 +145,25 @@ namespace TCPServerTic.Clases
 
             var players = room.GetPlayers();
             player.RoomId = roomID;
+            player.Room.RoomName = room.RoomName;
+            player.Room.RoomId = roomID;
             player.Message = "Players retrieved successfully";
             player.Success = true;
             player.Players = players.Select(p => new PlayerInfoDTO()
             {
                 ID = p.PlayerData.ID,
-                Name = $"Player {p.PlayerData.ID}",
-                LVL = 0
+                Name = p.PlayerData.Name,
+                LVL = 0,
+                Ready = p.PlayerData.Ready
             }).ToList();
 
+            player.RoomHasPassword = false;
 
             return player;
 
         }
 
-        public PlayerDTO OnPlayerJoin(int roomId, ClientSession client)
+        public PlayerDTO OnPlayerJoin(int roomId, ClientSession client, bool userWrotePass = false, string password = "")
         {
             Room room = null;
             PlayerDTO player = new PlayerDTO();
@@ -105,8 +172,39 @@ namespace TCPServerTic.Clases
             {
                 player.Success=false;
                 player.RoomId = roomId;
-                player.Message = "Error en unirse al server";
+                player.Message = "Error en unirse a la sala";
                 return player;
+            }
+
+            if (room.HasPassword)
+            {
+                if (userWrotePass)
+                {
+                    if (room.Password != password)
+                    {
+                        player.Success = false;
+                        player.RoomName = room.RoomName;
+                        player.RoomId = roomId;
+                        player.Message = "Contraseña incorrecta";
+                        return player;
+                    }
+                }
+                else
+                {
+                    player.Success = true;
+                    player.RoomId = roomId;
+                    player.RoomName = room.RoomName;
+                    player.RoomHasPassword = true;
+                    player.Message = "Se requiere contraseña";
+                    using (Packet pck = new Packet())
+                    {
+                        pck.WriteInt((int)PacketTypeSend.SendRequirePassword);
+                        pck.WriteString(JsonConvert.SerializeObject(player));
+                        pck.WriteLength();
+                        client.SendData(pck);
+                    }
+                    return null;
+                }
             }
 
             if (!room.AddPlayer(client))
@@ -117,8 +215,12 @@ namespace TCPServerTic.Clases
                 return player;
             }
 
-            client.PlayerData.RoomID = roomId;
+            var roomsdto = GetRooms();
+            var ss = PacketFactory.Create<RoomInfoDTO>(PacketTypeSend.SendRoomList, roomsdto);
+            _serverManager.SendToAll(ss);
 
+            client.PlayerData.RoomID = roomId;
+    
             return GetPlayersInRoom(roomId);
         }
 
@@ -132,21 +234,36 @@ namespace TCPServerTic.Clases
 
         }
     
-        public PlayerDTO RemovePlayerFromRoom(int roomID,ClientSession session)
+        public PlayerDTO RemovePlayerFromRoom(int roomID,ClientSession session, int times = 1)
         {
             PlayerDTO player = new PlayerDTO();
+            player.Room = new RoomInfo();
             Room room = null;
 
             player.Success = false;
             if (!_rooms.TryGetValue(roomID, out room))  return player;
 
             player.Success = true;
+            player.Room.RoomName = room.RoomName;
+            player.Room.RoomId = roomId;
+            player.Room.RoomHost = room.RoomHost;
             room.RemovePlayer(session);
+
 
             player.RoomId = roomID;
             player.Players = GetPlayers(room);
-
             
+            using (Packet pck = new Packet())
+            {
+                pck.WriteInt((int)PacketTypeSend.sendExitRoom);
+                pck.WriteInt(times);
+                pck.WriteLength();
+                session.SendData(pck);
+            }
+
+            var pck2 = PacketFactory.Create<PlayerDTO>(PacketTypeSend.SendPlayersInRoom, player);
+            SendDataAllPlayerInRoom(room,pck2);
+
             if (room.GetPlayers().Length > 0) return player;
 
             _rooms.TryRemove(room.RoomID, out _);
@@ -167,28 +284,38 @@ namespace TCPServerTic.Clases
             return room.GetPlayers().Length == 2;
         }
 
-        public void SetReadyPlayer(int roomID,ClientSession session)
+        public void SetReadyPlayer(int roomID, int plID, ClientSession session)
         {
             Room room = null;
             Packet pck = new Packet();
 
             if (!_rooms.TryGetValue(roomID, out room)) return;
 
-            room.SetPlayerInGame(session.PlayerData.ID);
+            room.SetReadyPlayerByID(plID);
 
+            //room.SetPlayerInGame(session.PlayerData.ID);
+            using (Packet pck2 = new Packet())
+            {
+                pck2.WriteInt((int)PacketTypeSend.SendPlayerReady);
+                pck2.WriteInt(plID);
+                pck2.WriteLength();
+                room.SendDataPlayersInRoom(pck2);
+            }
 
             int playersInGame = room.PlayerInGame();
+
             if (playersInGame == 2)
             {
                 pck = PacketFactory.CreateString(PacketTypeSend.SendMessage, "Empezando partida.....");
                 room.SendDataPlayersInRoom(pck);
-                room.SendWho();
-                room.Decide();
+                SendTimer(room);
+                //room.SendWho();
+                //room.Decide();
                 return;
             }
-            
-            pck = PacketFactory.CreateString(PacketTypeSend.SendMessage, "Esperando jugadores");
-            session.SendData(pck);            
+
+            pck = PacketFactory.CreateString(PacketTypeSend.SendMessage, "Esperando que den listo los demas jugadores");
+            session.SendData(pck);
         }
 
         private List<PlayerInfoDTO> GetPlayers(Room room)
@@ -199,7 +326,7 @@ namespace TCPServerTic.Clases
             return players.Select(p => new PlayerInfoDTO()
             {
                 ID = p.PlayerData.ID,
-                Name = $"Player {p.PlayerData.ID}",
+                Name = p.PlayerData.Name,
                 LVL = 0
             }).ToList();
         }
@@ -208,29 +335,22 @@ namespace TCPServerTic.Clases
         {
             int time =  0;
             foreach (var player in room.GetPlayers())
-            {
-                if (player.PlayerData.Play)
-                    continue;
                 _ = SendTimer(player);
-            }
+            
         }
 
         private async Task SendTimer(ClientSession session)
         {
-            int count = 1;
+            int count = 10;
             bool joined = false;
 
-            while (count < 11)
+            while (count >= 0)
             {
-                if (joined) break;
-                joined = session.PlayerData.InGame;
                 Packet pck = PacketFactory.SendInt(PacketTypeSend.SendCounter,count);
                 session.SendData(pck);
                 await Task.Delay(1000);
-                count++;
+                count--;
             }
-
-            if (joined) return;
             
             Packet pck2 = PacketFactory.SendBool(PacketTypeSend.SendLoadScene,true);
             session.SendData(pck2);
@@ -254,6 +374,14 @@ namespace TCPServerTic.Clases
                 return;
 
             room.UpdateBoard(player,index);       
+        }
+
+        private void SendDataAllPlayerInRoom(Room room,Packet pck)
+        {
+            var players = room.GetPlayers();
+            foreach(var player in players)
+                player.SendData(pck);
+
         }
     }
 }
