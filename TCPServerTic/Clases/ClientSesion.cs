@@ -10,7 +10,7 @@ namespace TCPServerTic.Clases
 {
     public class ClientSession
     {
-        public TcpClient _tcpClient;
+        public  TcpClient _tcpClient;
         private List<byte> _dataBuffer = new List<byte>();
         private Packet _pck;
         private IServerManager _sm;

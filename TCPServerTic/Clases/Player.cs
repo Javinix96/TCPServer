@@ -7,8 +7,8 @@ namespace TCPServerTic.Clases
         public bool Ready { get; set;  }
         public int ID { get; set; } = 0;
         public int RoomID { get; set; } = 0;
-        public string Name { get; set; }
+        public string Name { get; set; } = "";
         public bool InGame { get; set; } = false;
-        public string Who { get; set; }
+        public string Who { get; set; } = "";
     }
 }

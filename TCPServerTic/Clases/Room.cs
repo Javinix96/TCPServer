@@ -45,7 +45,10 @@ namespace TCPServerTic.Clases
                 return false;
             player.PlayerData.RoomID = _roomID;
             return true;
+
         }
+
+        public int CountPlayers() => _roomPlayers.Count;
 
         public void RemovePlayer(ClientSession player)
         {
@@ -224,6 +227,23 @@ namespace TCPServerTic.Clases
 
             SendDataPlayersInRoom(PacketFactory.CreateString(PacketTypeSend.SendTurn, $"Turno del jugador: {currentTurn}"));
         }
+
+        public void ChoosePlayer()
+        {
+            Random r = new Random();
+
+            int rand = r.Next(0, 100);
+
+            if (CountPlayers() == 1)
+            {
+                _roomPlayers.Values.First().PlayerData.Who = rand % 2 == 0 ? "X" : "O";
+                return;
+            }
+
+            var player1 = _roomPlayers.Values.ElementAt(0).PlayerData.Who;
+            _roomPlayers.Values.ElementAt(1).PlayerData.Who = player1 == "X" ? "O" : "X";
+        }
+
 
         private void ChangeTurn() => currentTurn = currentTurn == "X" ? "O" : "X";
 

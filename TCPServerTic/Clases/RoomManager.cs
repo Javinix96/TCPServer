@@ -38,6 +38,7 @@ namespace TCPServerTic.Clases
             }
 
             newRoom.AddPlayer(session);
+            newRoom.ChoosePlayer();
 
             dto.Room.RoomId = newRoomId;
             dto.Room.RoomName = name;
@@ -154,7 +155,8 @@ namespace TCPServerTic.Clases
                 ID = p.PlayerData.ID,
                 Name = p.PlayerData.Name,
                 LVL = 0,
-                Ready = p.PlayerData.Ready
+                Ready = p.PlayerData.Ready,
+                Who = p.PlayerData.Who
             }).ToList();
 
             player.RoomHasPassword = false;
@@ -167,14 +169,16 @@ namespace TCPServerTic.Clases
         {
             Room room = null;
             PlayerDTO player = new PlayerDTO();
+            player.RoomId = roomId;
 
             if (!_rooms.TryGetValue(roomId,out room))
             {
                 player.Success=false;
-                player.RoomId = roomId;
                 player.Message = "Error en unirse a la sala";
                 return player;
             }
+
+            player.RoomName = room.RoomName;
 
             if (room.HasPassword)
             {
@@ -183,8 +187,6 @@ namespace TCPServerTic.Clases
                     if (room.Password != password)
                     {
                         player.Success = false;
-                        player.RoomName = room.RoomName;
-                        player.RoomId = roomId;
                         player.Message = "Contraseña incorrecta";
                         return player;
                     }
@@ -192,8 +194,6 @@ namespace TCPServerTic.Clases
                 else
                 {
                     player.Success = true;
-                    player.RoomId = roomId;
-                    player.RoomName = room.RoomName;
                     player.RoomHasPassword = true;
                     player.Message = "Se requiere contraseña";
                     using (Packet pck = new Packet())
@@ -215,8 +215,11 @@ namespace TCPServerTic.Clases
                 return player;
             }
 
+            room.ChoosePlayer();
+
             var roomsdto = GetRooms();
             var ss = PacketFactory.Create<RoomInfoDTO>(PacketTypeSend.SendRoomList, roomsdto);
+
             _serverManager.SendToAll(ss);
 
             client.PlayerData.RoomID = roomId;
@@ -224,12 +227,13 @@ namespace TCPServerTic.Clases
             return GetPlayersInRoom(roomId);
         }
 
-        public void SendPlayersToARoom(int roomID,Packet pck)
+        public void SendPlayersToARoom(int roomID,Packet pck, int idSended = 0)
         {
             Room room = null;
             if (!_rooms.TryGetValue(roomID, out room)) return;
 
             foreach(ClientSession session in room.GetPlayers())
+                if (idSended != session.PlayerData.ID )
                     session.SendData(pck);
 
         }

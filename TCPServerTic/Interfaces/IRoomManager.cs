@@ -9,7 +9,7 @@ namespace TCPServerTic.Interfaces
         RoomInfoDTO GetRooms();
         PlayerDTO GetPlayersInRoom(int roomID);
         PlayerDTO OnPlayerJoin(int roomId, ClientSession client,bool userWrotePass = false, string password = "");
-        void SendPlayersToARoom(int roomID, Packet pck);
+        void SendPlayersToARoom(int roomID, Packet pck, int idSended = 0);
         PlayerDTO RemovePlayerFromRoom(int roomID, ClientSession session, int times = 1);
         bool CanLoadSceneGame(int clientID,int id);
     }

@@ -25,7 +25,7 @@ namespace TCPServerTic.Clases.PacketRecieve
             var pck2 = PacketFactory.Create<PlayerDTO>(PacketTypeSend.SendRequestJoinToRoom, dto);
             client.SendData(pck2);
             var pck = PacketFactory.Create<PlayerDTO>(PacketTypeSend.SendPlayersInRoom,dto);
-            _roomManager.SendPlayersToARoom(roomID, pck);         
+            _roomManager.SendPlayersToARoom(roomID, pck,client.PlayerData.ID);         
         }
     }
 }

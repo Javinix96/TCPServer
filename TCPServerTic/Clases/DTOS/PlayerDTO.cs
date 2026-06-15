@@ -25,5 +25,6 @@ namespace TCPServerTic.Clases.DTOS
         public string Name { get; set; }
         public int LVL { get; set; }
         public bool Ready { get; set; }
+        public string Who { get; set; }
     }
 }
